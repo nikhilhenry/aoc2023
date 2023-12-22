@@ -1,26 +1,42 @@
-use std::{collections::HashSet, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use anyhow::{anyhow, Error, Result};
+use itertools::Itertools;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Card {
     id: usize,
     winning_nums: HashSet<usize>,
-    nums: HashSet<usize>,
+    nums: Vec<usize>,
+}
+
+#[derive(Clone)]
+struct CopyCard {
+    copy_idxs: Option<Vec<usize>>,
 }
 
 impl Card {
-    fn points(&self) -> usize {
-        let num_winning = self
-            .nums
+    fn matching_count(&self) -> usize {
+        self.nums
             .iter()
             .filter(|num| self.winning_nums.contains(num))
-            .count();
-
+            .count()
+    }
+    fn points(&self) -> usize {
+        let num_winning = self.matching_count();
         if num_winning > 0 {
             return 2_usize.pow((num_winning - 1) as u32);
         }
         0
+    }
+    fn matching_idxs(&self) -> Option<Vec<usize>> {
+        if self.matching_count() == 0 {
+            return None;
+        }
+        Some((self.id + 1..=self.id + self.matching_count()).collect())
     }
 }
 
@@ -58,5 +74,31 @@ fn main() -> Result<()> {
         "Part 1: {:?}",
         cards.iter().map(|card| card.points()).sum::<usize>()
     );
+
+    let copy_cards: HashMap<usize, CopyCard> = cards
+        .iter()
+        .map(|card| {
+            (
+                card.id,
+                CopyCard {
+                    copy_idxs: card.matching_idxs(),
+                },
+            )
+        })
+        .collect();
+
+    let mut pile: Vec<CopyCard> = copy_cards.clone().into_values().collect();
+    let mut idx = 0_usize;
+
+    while idx < pile.len() {
+        if let Some(idxs) = pile[idx].copy_idxs.clone() {
+            idxs.iter()
+                .for_each(|idx| pile.push(copy_cards.get(idx).unwrap().clone()));
+        }
+        idx += 1
+    }
+
+    println!("Part 2: {:?}", pile.len());
+
     Ok(())
 }
