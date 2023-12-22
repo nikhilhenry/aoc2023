@@ -1,13 +1,12 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use anyhow::{anyhow, Error, Result};
-use itertools::Itertools;
 
 #[derive(Debug)]
 struct Card {
     id: usize,
-    winning_nums: Vec<usize>,
-    nums: Vec<usize>,
+    winning_nums: HashSet<usize>,
+    nums: HashSet<usize>,
 }
 
 impl Card {
@@ -38,12 +37,12 @@ impl FromStr for Card {
         let winning_nums = winning_nums
             .split(" ")
             .filter_map(|num| num.parse::<usize>().ok())
-            .collect_vec();
+            .collect();
 
         let nums = nums
             .split(" ")
             .filter_map(|num| num.parse::<usize>().ok())
-            .collect_vec();
+            .collect();
 
         Ok(Card {
             id,
