@@ -21,7 +21,7 @@ struct Hand {
 }
 
 fn get_rank(ch: char) -> usize {
-    let ranks = "23456789TJQKA";
+    let ranks = "J23456789TQKA";
     ranks.find(ch).expect("invalid character")
 }
 
@@ -65,6 +65,7 @@ impl Hand {
         let cards = self.val.chars().collect_vec();
         let set: HashSet<char> = HashSet::from_iter(cards.clone().into_iter());
 
+        let is_joker = set.contains(&'J');
         let card_count = set
             .into_iter()
             .map(|card| {
@@ -76,7 +77,11 @@ impl Hand {
             .collect_vec();
 
         let card_type = if card_count.len() == 4 {
-            HandType::OnePair
+            if is_joker {
+                HandType::ThreeKind
+            } else {
+                HandType::OnePair
+            }
         } else if card_count.len() == 3 {
             if card_count
                 .iter()
@@ -85,9 +90,19 @@ impl Hand {
                 .count()
                 == 2
             {
-                HandType::ThreeKind
+                if !is_joker {
+                    HandType::ThreeKind
+                } else {
+                    HandType::FourKind
+                }
             } else {
-                HandType::TwoPair
+                if !is_joker {
+                    HandType::TwoPair
+                } else if card_count.contains(&('J', 2)) {
+                    HandType::FourKind
+                } else {
+                    HandType::FullHouse
+                }
             }
         } else if card_count.len() == 2 {
             if card_count
@@ -97,14 +112,26 @@ impl Hand {
                 .count()
                 == 1
             {
-                HandType::FourKind
+                if !is_joker {
+                    HandType::FourKind
+                } else {
+                    HandType::FiveKind
+                }
             } else {
-                HandType::FullHouse
+                if !is_joker {
+                    HandType::FullHouse
+                } else {
+                    HandType::FiveKind
+                }
             }
         } else if card_count.len() == 1 {
             HandType::FiveKind
         } else {
-            HandType::HighCard
+            if !is_joker {
+                HandType::HighCard
+            } else {
+                HandType::OnePair
+            }
         };
 
         //println!("{:?}: {} -> {:?}", card_count, self.val, card_type);
