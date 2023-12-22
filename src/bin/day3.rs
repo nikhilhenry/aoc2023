@@ -146,8 +146,36 @@ fn main() -> Result<()> {
     }
 
     let part_sum = part_number_idxs.iter().map(|idx| nums[*idx]).collect_vec();
-    println!("{:?}", part_sum);
     println!("Part 1: {:?}", part_sum.iter().sum::<u32>());
+
+    // part 2:: mania!!
+    let mut gear_ratios: Vec<u32> = Vec::new();
+    for row in 0..COLS {
+        for col in 0..COLS {
+            let idx = get_idx(row, col);
+            match grid[idx] {
+                GridStates::Symbol => {
+                    let neighbours = get_neighbours(row, col);
+                    let mut gear_idxs: Vec<usize> = Vec::new();
+                    neighbours
+                        .iter()
+                        .for_each(|neighbour| match grid[*neighbour] {
+                            GridStates::Digit(id) => {
+                                if !gear_idxs.contains(&id) {
+                                    gear_idxs.push(id)
+                                }
+                            }
+                            _ => (),
+                        });
+                    if gear_idxs.len() == 2 {
+                        gear_ratios.push(gear_idxs.iter().map(|num_idx| nums[*num_idx]).product());
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+    println!("Part 2: {:?}", gear_ratios.iter().sum::<u32>());
 
     Ok(())
 }
