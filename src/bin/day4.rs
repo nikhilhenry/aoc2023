@@ -4,7 +4,6 @@ use std::{
 };
 
 use anyhow::{anyhow, Error, Result};
-use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 struct Card {
