@@ -1,24 +1,12 @@
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
-use std::{collections::HashMap, str::FromStr, usize};
-
-#[derive(Debug)]
-struct Seed {
-    id: usize,
-    soil: usize,
-    fertilizer: usize,
-    water: usize,
-    light: usize,
-    temp: usize,
-    humidity: usize,
-    location: usize,
-}
+use rayon::prelude::*;
+use std::{str::FromStr, usize};
 
 struct Range {
     source_start: usize,
     source_end: usize,
     dest: usize,
-    length: usize,
 }
 
 impl Range {
@@ -33,7 +21,6 @@ impl Range {
             source_start: source,
             source_end: source + length - 1,
             dest,
-            length,
         }
     }
     fn contains(&self, val: usize) -> bool {
@@ -88,9 +75,8 @@ impl FromStr for Map {
 fn main() -> Result<()> {
     let mut data = include_str!("../../data/day5.input").split("\n\n");
 
-    let seeds = data
-        .next()
-        .unwrap()
+    let seeds_data = data.next().unwrap();
+    let seeds_1 = seeds_data
         .split(" ")
         .filter_map(|num| num.parse::<usize>().ok())
         .collect_vec();
@@ -103,7 +89,7 @@ fn main() -> Result<()> {
     let temp_to_humid = data.next().unwrap().parse::<Map>().unwrap();
     let humid_to_location = data.next().unwrap().parse::<Map>().unwrap();
 
-    let seeds = seeds
+    let seeds = seeds_1
         .iter()
         .map(|seed| {
             let id = *seed;
@@ -115,28 +101,37 @@ fn main() -> Result<()> {
             let humidity = temp_to_humid.get_dest(temp);
             let location = humid_to_location.get_dest(humidity);
 
-            Seed {
-                id,
-                soil,
-                fertilizer,
-                water,
-                light,
-                temp,
-                humidity,
-                location,
-            }
+            location
         })
         .collect_vec();
 
-    println!(
-        "Part 1: {:?}",
-        seeds
-            .iter()
-            .sorted_by_key(|seed| seed.location)
-            .next()
-            .unwrap()
-            .location
-    );
+    println!("Part 1: {:?}", seeds.iter().sorted().next().unwrap());
+
+    let new_seeds = seeds_1
+        .chunks(2)
+        .map(|pair| (pair[0]..pair[0] + pair[1]).collect_vec())
+        .flatten()
+        .collect_vec();
+
+    println!("Number of seeds: {:?}", new_seeds.len());
+
+    let seeds: Vec<usize> = new_seeds
+        .par_iter()
+        .map(|seed| {
+            let id = *seed;
+            let soil = seed_to_soil.get_dest(id);
+            let fertilizer = soil_to_fertilizer.get_dest(soil);
+            let water = fertilizer_to_water.get_dest(fertilizer);
+            let light = water_to_light.get_dest(water);
+            let temp = light_to_temp.get_dest(light);
+            let humidity = temp_to_humid.get_dest(temp);
+            let location = humid_to_location.get_dest(humidity);
+
+            location
+        })
+        .collect();
+
+    println!("Part 2: {:?}", seeds.iter().sorted().next().unwrap());
 
     Ok(())
 }
