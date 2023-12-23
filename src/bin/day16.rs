@@ -22,24 +22,6 @@ enum Direction {
 }
 
 impl Direction {
-    fn rotate_cw(&self) -> Self {
-        match self {
-            Direction::North => Direction::East,
-            Direction::South => Direction::West,
-            Direction::West => Direction::North,
-            Direction::East => Direction::South,
-        }
-    }
-
-    fn rotate_ccw(&self) -> Self {
-        match self {
-            Direction::North => Direction::West,
-            Direction::South => Direction::East,
-            Direction::West => Direction::South,
-            Direction::East => Direction::North,
-        }
-    }
-
     fn get_offset(&self) -> Position {
         match self {
             Direction::North => aoc::pos!(-1, 0),
@@ -107,7 +89,7 @@ impl Contraption {
             return;
         }
         let dir = pos.dir.clone();
-        let mut poses = match self.grid.get(&pos.pos) {
+        let poses = match self.grid.get(&pos.pos) {
             Node::Empty => vec![VecPos {
                 pos: pos.pos.clone() + &pos.dir.get_offset(),
                 dir: dir,
@@ -173,11 +155,18 @@ impl Contraption {
             self.shine(pos)
         }
     }
+
+    fn energized(&self) -> usize {
+        self.visited
+            .iter()
+            .map(|pos| pos.pos.clone())
+            .collect::<HashSet<Position>>()
+            .len()
+    }
 }
 
 fn main() -> Result<()> {
     let grid: Grid<Node> = include_str!("../../data/day16.input").parse()?;
-    println!("{grid}");
 
     let mut contraption = Contraption {
         grid,
@@ -192,15 +181,7 @@ fn main() -> Result<()> {
 
     contraption.run();
 
-    println!(
-        "Part 1: {}",
-        contraption
-            .visited
-            .iter()
-            .map(|pos| pos.pos.clone())
-            .collect::<HashSet<Position>>()
-            .len()
-    );
+    println!("Part 1: {}", contraption.energized());
 
     Ok(())
 }
