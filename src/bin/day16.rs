@@ -3,7 +3,7 @@ use std::collections::{HashSet, VecDeque};
 use anyhow::Result;
 use aoc::{Grid, Position};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 enum Node {
     #[default]
     Empty,
@@ -44,12 +44,13 @@ impl From<char> for Node {
     }
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq)]
 struct VecPos {
     pos: Position,
     dir: Direction,
 }
 
+#[derive(Clone)]
 struct Contraption {
     queue: VecDeque<VecPos>,
     grid: Grid<Node>,
@@ -167,13 +168,15 @@ impl Contraption {
 
 fn main() -> Result<()> {
     let grid: Grid<Node> = include_str!("../../data/day16.input").parse()?;
+    let cols = grid.cols;
+    let rows = grid.rows;
 
     let mut contraption = Contraption {
         grid,
         queue: VecDeque::new(),
         visited: HashSet::new(),
     };
-
+    let copy_contrap = contraption.clone();
     contraption.shine(VecPos {
         pos: aoc::pos!(0, 0),
         dir: Direction::East,
@@ -182,6 +185,44 @@ fn main() -> Result<()> {
     contraption.run();
 
     println!("Part 1: {}", contraption.energized());
+
+    // Part 2 - Shinangains
+    // computing all the starting ray poses
+    let top = (0..cols).map(|col| VecPos {
+        pos: aoc::pos!(0, col),
+        dir: Direction::South,
+    });
+    let bottom = (0..cols).map(|col| VecPos {
+        pos: aoc::pos!(rows - 1, col),
+        dir: Direction::North,
+    });
+    let left = (0..rows).map(|row| VecPos {
+        pos: aoc::pos!(row, 0),
+        dir: Direction::East,
+    });
+    let right = (0..rows).map(|row| VecPos {
+        pos: aoc::pos!(row, cols - 1),
+        dir: Direction::West,
+    });
+
+    let mut rays = Vec::new();
+    rays.extend(top);
+    rays.extend(bottom);
+    rays.extend(left);
+    rays.extend(right);
+
+    let max_score = rays
+        .into_iter()
+        .map(|ray| {
+            let mut contrap = copy_contrap.clone();
+            contrap.shine(ray);
+            contrap.run();
+            contrap.energized()
+        })
+        .max()
+        .unwrap();
+
+    println!("Part 2: {max_score}");
 
     Ok(())
 }
