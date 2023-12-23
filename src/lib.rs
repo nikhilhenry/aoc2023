@@ -28,11 +28,19 @@ macro_rules! pos {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Grid<T> {
     pub rows: usize,
     pub cols: usize,
     pub nodes: HashMap<Position, T>,
+}
+
+impl<T: std::cmp::PartialEq + std::fmt::Debug> PartialOrd for Grid<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let other_str = format!("{other}");
+        let me_str = format!("{self}");
+        Some(me_str.cmp(&other_str))
+    }
 }
 
 impl<T: std::default::Default + std::convert::From<char>> FromStr for Grid<T> {

@@ -2,7 +2,7 @@ use anyhow::Result;
 use aoc::{Grid, Position};
 use itertools::Itertools;
 
-#[derive(Default, Clone)]
+#[derive(Default, PartialEq, Clone)]
 enum RockType {
     Rounded,
     Cube,
@@ -34,6 +34,7 @@ trait RockGrid {
     fn promote(&mut self, current: &Position, direction: &Position) -> Option<Position>;
     fn tilt(&mut self, direction: &Position);
     fn get_total_load(&self) -> usize;
+    fn cycle(&mut self);
 }
 
 impl RockGrid for Grid<RockType> {
@@ -90,31 +91,45 @@ impl RockGrid for Grid<RockType> {
         }
         total_load
     }
+
+    fn cycle(&mut self) {
+        self.tilt(&aoc::pos!(-1, 0)); // tilt north
+        self.tilt(&aoc::pos!(0, -1)); // tilt west
+        self.tilt(&aoc::pos!(1, 0)); // tilt south
+        self.tilt(&aoc::pos!(0, 1)); // tilt east
+    }
 }
 
 fn main() -> Result<()> {
-    let mut grid: Grid<RockType> = include_str!("../../data/day14.example").parse()?;
-    let mut grid_2: Grid<RockType> = include_str!("../../data/day14.example").parse()?;
-
-    println!("Intial Grid");
-    println!("{grid}");
+    let mut grid: Grid<RockType> = include_str!("../../data/day14.input").parse()?;
+    let mut grid_2: Grid<RockType> = include_str!("../../data/day14.input").parse()?;
 
     grid.tilt(&aoc::pos!(-1, 0));
 
-    //println!("Titled Grid");
-    //println!("{grid}");
-
-    //println!("Part 1: {}", grid.get_total_load());
+    println!("Part 1: {}", grid.get_total_load());
 
     // part 2
-    for _ in 0..3 {
-        grid_2.tilt(&aoc::pos!(-1, 0)); // tilt north
-        grid_2.tilt(&aoc::pos!(0, -1)); // tilt west
-        grid_2.tilt(&aoc::pos!(1, 0)); // tilt south
-        grid_2.tilt(&aoc::pos!(0, 1)); // tilt east
+    let mut cycles_states = Vec::new();
+    while !cycles_states.contains(&format!("{grid_2}")) {
+        cycles_states.push(format!("{grid_2}"));
+        grid_2.cycle();
     }
 
-    println!("{grid_2}");
+    let len = cycles_states.len();
+    println!("Found cycle in {len} iterations");
+    let cycle_start = cycles_states
+        .iter()
+        .position(|s| s == &format!("{grid_2}"))
+        .unwrap();
+    println!("Cycle starts at {cycle_start} iteration");
+    let cycle_length = len - cycle_start;
+    println!("cycle length: {cycle_length}");
+
+    let num_cycles = (1000000000 - len) % cycle_length;
+
+    for _ in 0..num_cycles {
+        grid_2.cycle();
+    }
 
     println!("Part 2: {}", grid_2.get_total_load());
 
