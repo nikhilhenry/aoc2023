@@ -36,10 +36,12 @@ pub struct Grid<T> {
 
 impl<T: std::fmt::Debug> Display for Grid<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f).unwrap();
         for row in 0..self.rows {
             for col in 0..self.cols {
-                return write!(f, "{:?} ", self.nodes.get(&pos!(row, col)).unwrap());
+                write!(f, "{:?} ", self.nodes.get(&pos!(row, col)).unwrap()).unwrap();
             }
+            writeln!(f).unwrap();
         }
         Ok(())
     }
@@ -54,7 +56,7 @@ impl<T: Default> Grid<T> {
                 .map(|row| (0..cols).map(move |col| pos!(row as i32, col as i32)))
                 .flatten()
                 .for_each(|pos| {
-                    nodes.insert(pos, T::default()).expect("failed to insert");
+                    nodes.insert(pos, T::default());
                 });
         }
 
