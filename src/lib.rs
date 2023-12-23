@@ -34,6 +34,26 @@ pub struct Grid<T> {
     nodes: HashMap<Position, T>,
 }
 
+impl<T: std::default::Default + std::convert::From<char>> FromStr for Grid<T> {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> anyhow::Result<Self> {
+        let mut s = s.to_string();
+        s.pop(); // annoying newline character
+        let data = s.split("\n");
+        let rows = data.clone().count();
+        let cols = data.clone().next().unwrap().chars().count() - 1;
+        let mut grid: Grid<T> = Grid::new(rows, cols, false);
+        data.enumerate().for_each(|(row, line)| {
+            line.chars().enumerate().for_each(|(col, ch)| {
+                grid.nodes
+                    .insert(pos!(row, col), ch.try_into().expect("unable to parse"));
+            })
+        });
+        Ok(grid)
+    }
+}
+
 impl<T: std::fmt::Debug> Display for Grid<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f).unwrap();
