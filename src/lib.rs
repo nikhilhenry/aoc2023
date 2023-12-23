@@ -12,7 +12,7 @@ where
         .collect())
 }
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Hash, Eq, Clone, PartialEq)]
 pub struct Position {
     pub row: i32,
     pub col: i32,
@@ -28,6 +28,7 @@ macro_rules! pos {
     };
 }
 
+#[derive(Clone)]
 pub struct Grid<T> {
     pub rows: usize,
     pub cols: usize,
