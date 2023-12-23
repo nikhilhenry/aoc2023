@@ -14,8 +14,8 @@ where
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct Position {
-    row: i32,
-    col: i32,
+    pub row: i32,
+    pub col: i32,
 }
 
 #[macro_export]
@@ -29,9 +29,9 @@ macro_rules! pos {
 }
 
 pub struct Grid<T> {
-    rows: usize,
-    cols: usize,
-    nodes: HashMap<Position, T>,
+    pub rows: usize,
+    pub cols: usize,
+    pub nodes: HashMap<Position, T>,
 }
 
 impl<T: std::default::Default + std::convert::From<char>> FromStr for Grid<T> {
@@ -42,7 +42,7 @@ impl<T: std::default::Default + std::convert::From<char>> FromStr for Grid<T> {
         s.pop(); // annoying newline character
         let data = s.split("\n");
         let rows = data.clone().count();
-        let cols = data.clone().next().unwrap().chars().count() - 1;
+        let cols = data.clone().next().unwrap().chars().count();
         let mut grid: Grid<T> = Grid::new(rows, cols, false);
         data.enumerate().for_each(|(row, line)| {
             line.chars().enumerate().for_each(|(col, ch)| {
@@ -86,6 +86,9 @@ impl<T: Default> Grid<T> {
     pub fn get_mut(&mut self, pos: &Position) -> &mut T {
         self.nodes.get_mut(pos).expect("invalid position")
     }
+    pub fn get(&self, pos: &Position) -> &T {
+        self.nodes.get(pos).expect("invalid position")
+    }
 
     pub fn get_neighbours(&self, me: &Position, diag: bool) -> Vec<Position> {
         if diag {
@@ -103,7 +106,7 @@ impl<T: Default> Grid<T> {
         }
     }
 
-    fn is_valid_pos(&self, pos: &Position) -> bool {
+    pub fn is_valid_pos(&self, pos: &Position) -> bool {
         pos.row >= 0 && pos.row < self.rows as i32 && pos.col >= 0 && pos.col < self.cols as i32
     }
 }
