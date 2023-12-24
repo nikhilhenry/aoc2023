@@ -73,13 +73,13 @@ impl PatternGrid {
         Some(row_top + 1)
     }
 
-    fn find_reflection(&self) -> Option<Reflection> {
+    fn find_reflection(&self, diff: usize) -> Option<Reflection> {
         // try to find vertical reflections
         let raw = (0..self.cols.len()).collect_vec();
         let idxs = raw.windows(2).map(|pair| (pair[0] + 1, pair[1] + 1));
         let mut matches = idxs
             .map(|pair| (pair, self.check_reflection_2(false, pair)))
-            .filter(|pair| pair.1 == 0);
+            .filter(|pair| pair.1 == diff);
         if let Some(num) = matches.next() {
             return Some(Reflection::Vertical(num.0 .0));
         }
@@ -89,7 +89,7 @@ impl PatternGrid {
         let idxs = raw.windows(2).map(|pair| (pair[0] + 1, pair[1] + 1));
         let mut matches = idxs
             .map(|pair| (pair, self.check_reflection_2(true, pair)))
-            .filter(|pair| pair.1 == 0);
+            .filter(|pair| pair.1 == diff);
         if let Some(num) = matches.next() {
             return Some(Reflection::Horizontal(num.0 .0));
         }
@@ -112,20 +112,24 @@ fn main() -> Result<()> {
         rows: (0..g.rows).map(|row| collect_row(&g, row)).collect(),
     });
 
-    //println!("{:?}", grids.collect_vec()[0].find_reflection());
-    println!(
-        "{:?}",
-        grids.clone().map(|g| g.find_reflection()).collect_vec()
-    );
-
     let score: usize = grids
-        .filter_map(|g| g.find_reflection())
+        .clone()
+        .filter_map(|g| g.find_reflection(0))
         .map(|reflection| match reflection {
             Reflection::Vertical(num) => num,
             Reflection::Horizontal(num) => num * 100,
         })
         .sum();
     println!("Part 1: {score}");
+
+    let score: usize = grids
+        .filter_map(|g| g.find_reflection(1))
+        .map(|reflection| match reflection {
+            Reflection::Vertical(num) => num,
+            Reflection::Horizontal(num) => num * 100,
+        })
+        .sum();
+    println!("Part 2: {score}");
 
     Ok(())
 }
