@@ -30,6 +30,7 @@ enum Reflection {
 }
 
 struct PatternGrid {
+    id: usize,
     cols: Vec<usize>,
     rows: Vec<usize>,
 }
@@ -38,25 +39,20 @@ impl PatternGrid {
     fn check_reflection(&self, check_row: bool, idxs: (usize, usize)) -> Option<usize> {
         let items = if check_row { &self.rows } else { &self.cols };
         let len = items.len();
-        if idxs.0 - 1 == 0 || idxs.1 - 1 == len {
-            return None;
-        }
         let row_top = idxs.0 - 1;
         let row_bottom = idxs.1 - 1;
         let mut idx = 0;
-        //let target_idx = cmp::min(row_top, len - row_bottom - 1);
-        let target_idx = row_top;
-        //println!("target: {target_idx}");
-        while idx != target_idx {
-            let Some(r1) = items.get(row_top - idx) else {
-                return None;
-            };
-            let Some(r2) = items.get(row_bottom + idx) else {
-                return None;
-            };
+        let target_idx = cmp::min(row_top, len - row_bottom - 1);
+        //let target_idx = cmp::max(row_top, len - row_bottom - 1);
+        //let target_idx = row_top;
+        while idx <= target_idx {
+            let r1 = items[row_top - idx];
+            let r2 = items[row_bottom + idx];
             if r1 == r2 {
                 idx += 1
             } else {
+                //println!("t:{row_top} b:{row_bottom} idx: {idx} r1:{r1} r2:{r2}");
+                //println!("{:?}", items);
                 return None;
             }
         }
@@ -66,9 +62,6 @@ impl PatternGrid {
     fn find_reflection(&self) -> Option<Reflection> {
         // try to find vertical reflections
         let mut raw = (0..self.cols.len()).collect_vec();
-        if raw.len() % 2 == 1 {
-            raw.pop();
-        }
         let idxs = raw.windows(2).map(|pair| (pair[0] + 1, pair[1] + 1));
         let mut matches = idxs.filter_map(|pair| self.check_reflection(false, pair));
         if let Some(num) = matches.next() {
@@ -77,9 +70,6 @@ impl PatternGrid {
 
         // try to find horizontal reflections
         let mut raw = (0..self.rows.len()).collect_vec();
-        if raw.len() % 2 == 1 {
-            raw.pop();
-        }
         let idxs = raw.windows(2).map(|pair| (pair[0] + 1, pair[1] + 1));
         let mut matches = idxs.filter_map(|pair| self.check_reflection(true, pair));
         if let Some(num) = matches.next() {
@@ -99,10 +89,20 @@ fn main() -> Result<()> {
         s.parse::<Grid<char>>().ok()
     });
 
-    let mut grids = grids.map(|g| PatternGrid {
+    let mut grids = grids.enumerate().map(|(idx, g)| PatternGrid {
+        id: idx,
         cols: (0..g.cols).map(|col| collect_col(&g, col)).collect(),
         rows: (0..g.rows).map(|row| collect_row(&g, row)).collect(),
     });
+
+    //println!("{:?}", grids.collect_vec()[0].find_reflection());
+
+    //todo!();
+
+    println!(
+        "{:?}",
+        grids.clone().map(|g| g.find_reflection()).collect_vec()
+    );
 
     let score: usize = grids
         .filter_map(|g| g.find_reflection())
@@ -112,11 +112,6 @@ fn main() -> Result<()> {
         })
         .sum();
     println!("Part 1: {score}");
-
-    todo!();
-
-    println!("{:?}", grids.next().unwrap().find_reflection());
-    println!("{:?}", grids.next().unwrap().find_reflection());
 
     todo!();
 
