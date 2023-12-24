@@ -12,7 +12,7 @@ where
         .collect())
 }
 
-#[derive(Hash, Eq, Clone, PartialEq)]
+#[derive(Hash, Debug, Eq, Clone, PartialEq)]
 pub struct Position {
     pub row: i32,
     pub col: i32,
@@ -115,15 +115,23 @@ impl<T: Default> Grid<T> {
         }
     }
 
+    pub fn get_neighbours_raw(&self, me: &Position) -> Vec<Position> {
+        OFFSETS.iter().map(|offset| me + offset).collect()
+    }
     pub fn is_valid_pos(&self, pos: &Position) -> bool {
         pos.row >= 0 && pos.row < self.rows as i32 && pos.col >= 0 && pos.col < self.cols as i32
     }
 }
-const OFFSETS: [Position; 4] = [
-    pos!(1, 0),  // right
-    pos!(-1, 0), // left
-    pos!(0, -1), // top
-    pos!(0, 1),  // bottom
+pub fn manhattan_distance(from: &Position, to: &Position) -> usize {
+    let x_dist = (to.row - from.row).abs();
+    let y_dist = (to.col - from.col).abs();
+    (x_dist + y_dist) as usize * 4
+}
+pub const OFFSETS: [Position; 4] = [
+    pos!(0, 1),  // right
+    pos!(0, -1), // left
+    pos!(-1, 0), // top
+    pos!(1, 0),  // bottom
 ];
 
 const DIAG_OFFSETS: [Position; 4] = [
