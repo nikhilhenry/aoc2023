@@ -1,4 +1,3 @@
-#![feature(const_trait_impl)]
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use anyhow::Result;
@@ -16,14 +15,14 @@ enum Direction {
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]
 struct Node {
     pos: Position,
-    cost: usize,
+    heat: usize,
     step_length: u8,
     dir: Direction,
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.cost.cmp(&self.cost)
+        other.heat.cmp(&self.heat)
     }
 }
 
@@ -35,6 +34,7 @@ impl PartialOrd for Node {
 
 struct HeatBlock {
     grid: Grid<char>,
+    dest_pos: Position,
 }
 
 lazy_static! {
@@ -67,15 +67,16 @@ impl HeatBlock {
 
         offsets
             .drain()
-            .filter(|(_, pos)| self.grid.is_valid_pos(&(node.pos + pos)))
-            .map(|(dir, off)| Node {
+            .map(|(dir, off)| (dir, node.pos + &off))
+            .filter(|(_, pos)| self.grid.is_valid_pos(pos))
+            .map(|(dir, pos)| Node {
                 step_length: if node.dir == dir {
                     node.step_length + 1
                 } else {
                     1
                 },
-                cost: node.cost + self.get_heat(&(off + &node.pos)),
-                pos: off + &node.pos,
+                heat: node.heat + self.get_heat(&pos),
+                pos,
                 dir,
             })
             .collect()
@@ -87,20 +88,19 @@ impl HeatBlock {
 
         let start_node = Node {
             pos: aoc::pos!(0, 0),
-            cost: 0,
+            heat: 0,
             step_length: 1,
             dir: Direction::East,
         };
 
-        let dest_pos = aoc::pos!(self.grid.rows - 1, self.grid.cols - 1);
         min_heap.push(start_node);
 
         while let Some(node) = min_heap.pop() {
             if visited.contains(&node) {
                 continue;
             }
-            if node.pos == dest_pos {
-                println!("Part 1: {}", node.cost);
+            if node.pos == self.dest_pos {
+                println!("Part 1: {}", node.heat);
                 break;
             }
 
@@ -115,7 +115,8 @@ impl HeatBlock {
 
 fn main() -> Result<()> {
     let grid: Grid<char> = include_str!("../../data/day17.input").parse()?;
-    let heat_block = HeatBlock { grid };
+    let dest_pos = aoc::pos!(grid.rows - 1, grid.cols - 1);
+    let heat_block = HeatBlock { dest_pos, grid };
     heat_block.find_path();
 
     Ok(())
