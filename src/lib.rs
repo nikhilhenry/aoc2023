@@ -12,7 +12,7 @@ where
         .collect())
 }
 
-#[derive(Hash, Debug, Eq, Clone, PartialEq)]
+#[derive(Hash, Debug, Eq, Copy, Clone, PartialEq)]
 pub struct Position {
     pub row: i32,
     pub col: i32,
@@ -93,10 +93,12 @@ impl<T: Default> Grid<T> {
     }
 
     pub fn get_mut(&mut self, pos: &Position) -> &mut T {
-        self.nodes.get_mut(pos).expect("invalid position")
+        self.nodes
+            .get_mut(pos)
+            .expect(&format!("{:?} is invalid", pos))
     }
     pub fn get(&self, pos: &Position) -> &T {
-        self.nodes.get(pos).expect("invalid position")
+        self.nodes.get(pos).expect(&format!("{:?} is invalid", pos))
     }
 
     pub fn get_neighbours(&self, me: &Position, diag: bool) -> Vec<Position> {
