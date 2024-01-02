@@ -51,7 +51,7 @@ impl HeatBlock {
         self.grid.get(pos).to_digit(10).unwrap() as usize
     }
 
-    fn get_neighbours(&self, node: &Node) -> Vec<Node> {
+    fn get_neighbours(&self, node: &Node, min: u8, max: u8) -> Vec<Node> {
         let mut offsets = DIR_OFFSETS.clone();
         // removing the reverse direction
         match node.dir {
@@ -61,8 +61,14 @@ impl HeatBlock {
             Direction::West => offsets.remove(&Direction::East),
         };
 
-        if node.step_length == 3 {
+        if node.step_length == max {
             offsets.remove(&node.dir);
+        }
+
+        if node.step_length < min {
+            offsets = [(node.dir.clone(), offsets[&node.dir].clone())]
+                .into_iter()
+                .collect()
         }
 
         offsets
@@ -82,7 +88,7 @@ impl HeatBlock {
             .collect()
     }
 
-    fn find_path(&self) {
+    fn find_path(&self, min: u8, max: u8) -> usize {
         let mut min_heap = BinaryHeap::new();
         let mut visited = HashSet::new();
 
@@ -99,17 +105,18 @@ impl HeatBlock {
             if visited.contains(&node) {
                 continue;
             }
-            if node.pos == self.dest_pos {
-                println!("Part 1: {}", node.heat);
-                break;
+            if node.pos == self.dest_pos && node.step_length > min {
+                return node.heat;
             }
 
-            for neighbour in self.get_neighbours(&node) {
+            for neighbour in self.get_neighbours(&node, min, max) {
                 min_heap.push(neighbour)
             }
 
             visited.insert(node);
         }
+
+        panic!("Failed to find path")
     }
 }
 
@@ -117,7 +124,8 @@ fn main() -> Result<()> {
     let grid: Grid<char> = include_str!("../../data/day17.input").parse()?;
     let dest_pos = aoc::pos!(grid.rows - 1, grid.cols - 1);
     let heat_block = HeatBlock { dest_pos, grid };
-    heat_block.find_path();
+    println!("Part 1: {}", heat_block.find_path(0, 3));
+    println!("Part 2: {}", heat_block.find_path(4, 10));
 
     Ok(())
 }

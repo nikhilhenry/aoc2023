@@ -127,7 +127,7 @@ impl<T: Default> Grid<T> {
 pub fn manhattan_distance(from: &Position, to: &Position) -> usize {
     let x_dist = (to.row - from.row).abs();
     let y_dist = (to.col - from.col).abs();
-    (x_dist + y_dist) as usize * 4
+    (x_dist + y_dist) as usize
 }
 pub const OFFSETS: [Position; 4] = [
     pos!(0, 1),  // right
