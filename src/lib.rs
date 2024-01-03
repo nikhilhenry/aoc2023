@@ -1,5 +1,6 @@
 use anyhow::Result;
 use core::str::FromStr;
+use lazy_static::lazy_static;
 use std::{collections::HashMap, fmt::Display, fs::read_to_string, ops::Add};
 
 pub fn read_one_per_line<T>(path: &str) -> Result<Vec<T>>
@@ -163,4 +164,22 @@ impl Add<&Position> for Position {
             col: self.col + rhs.col,
         }
     }
+}
+
+#[derive(Eq, PartialEq, Debug, Clone, Hash)]
+pub enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+lazy_static! {
+    pub static ref DIR_OFFSETS: HashMap<Direction, Position> = [
+        (Direction::East, OFFSETS[0]),
+        (Direction::West, OFFSETS[1]),
+        (Direction::North, OFFSETS[2]),
+        (Direction::South, OFFSETS[3]),
+    ]
+    .into();
 }

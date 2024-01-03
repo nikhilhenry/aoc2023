@@ -1,16 +1,7 @@
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashSet};
 
 use anyhow::Result;
-use aoc::{Grid, Position};
-use lazy_static::lazy_static;
-
-#[derive(Eq, PartialEq, Debug, Clone, Hash)]
-enum Direction {
-    North,
-    South,
-    East,
-    West,
-}
+use aoc::{Direction, Grid, Position};
 
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]
 struct Node {
@@ -41,22 +32,13 @@ struct HeatBlock {
     dest_pos: Position,
 }
 
-lazy_static! {
-    static ref DIR_OFFSETS: HashMap<Direction, Position> = [
-        (Direction::East, aoc::OFFSETS[0]),
-        (Direction::West, aoc::OFFSETS[1]),
-        (Direction::North, aoc::OFFSETS[2]),
-        (Direction::South, aoc::OFFSETS[3]),
-    ]
-    .into();
-}
 impl HeatBlock {
     fn get_heat(&self, pos: &Position) -> usize {
         self.grid.get(pos).to_digit(10).unwrap() as usize
     }
 
     fn get_neighbours(&self, node: &Node, min: u8, max: u8) -> Vec<Node> {
-        let mut offsets = DIR_OFFSETS.clone();
+        let mut offsets = aoc::DIR_OFFSETS.clone();
         // removing the reverse direction
         match node.dir {
             Direction::North => offsets.remove(&Direction::South),
