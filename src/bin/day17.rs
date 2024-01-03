@@ -16,13 +16,17 @@ enum Direction {
 struct Node {
     pos: Position,
     heat: usize,
+    dist: usize,
     step_length: u8,
     dir: Direction,
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.heat.cmp(&self.heat)
+        let self_cost = self.heat + self.dist;
+        let other_cost = other.heat + other.dist;
+        //other.heat.cmp(&self.heat)
+        other_cost.cmp(&self_cost)
     }
 }
 
@@ -82,6 +86,7 @@ impl HeatBlock {
                     1
                 },
                 heat: node.heat + self.get_heat(&pos),
+                dist: aoc::manhattan_distance(&pos, &self.dest_pos),
                 pos,
                 dir,
             })
@@ -95,6 +100,7 @@ impl HeatBlock {
         let start_node = Node {
             pos: aoc::pos!(0, 0),
             heat: 0,
+            dist: aoc::manhattan_distance(&aoc::pos!(0, 0), &self.dest_pos),
             step_length: 1,
             dir: Direction::East,
         };
