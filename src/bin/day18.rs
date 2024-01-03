@@ -1,15 +1,12 @@
-#![allow(unused)]
-use std::{cmp::Ordering, i32, str::FromStr};
+use std::{i32, str::FromStr};
 
 use anyhow::{anyhow, Result};
-use aoc::{pos, Direction, Position};
-use itertools::Itertools;
+use aoc::{Direction, Position};
 
 #[derive(Debug)]
 struct Instruction {
     dir: Direction,
     mag: usize,
-    color: String,
 }
 
 impl FromStr for Instruction {
@@ -18,13 +15,9 @@ impl FromStr for Instruction {
     fn from_str(s: &str) -> Result<Self> {
         let (dir, s) = s.split_once(" ").ok_or(anyhow!("Failed to parse"))?;
         let dir = parse_dir(dir)?;
-        let (num, s) = s.split_once(" ").ok_or(anyhow!("Failed to parse"))?;
+        let (num, _) = s.split_once(" ").ok_or(anyhow!("Failed to parse"))?;
         let mag = num.parse()?;
-        Ok(Self {
-            dir,
-            mag,
-            color: s.to_string(),
-        })
+        Ok(Self { dir, mag })
     }
 }
 
@@ -36,12 +29,6 @@ fn parse_dir(s: &str) -> Result<Direction> {
         "D" => Ok(Direction::South),
         _ => Err(anyhow!("invalid direction")),
     }
-}
-
-fn sort_cc_points(a: &Position, _: &Position) -> Ordering {
-    let ang_1 = f64::atan2(a.row.into(), a.col.into());
-
-    ang_1.total_cmp(&0.0)
 }
 
 fn main() -> Result<()> {
