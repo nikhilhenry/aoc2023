@@ -1,6 +1,8 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, str::FromStr, usize};
 
 use anyhow::{anyhow, Result};
+use itertools::Itertools;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 #[derive(Debug)]
 enum Instruction {
@@ -56,6 +58,54 @@ fn parse_instructions(s: &str) -> Vec<Instruction> {
         .collect()
 }
 
+fn traverse_network(
+    mut cursor: String,
+    num_zs: usize,
+    network: &HashMap<String, Node>,
+    instructions: &Vec<Instruction>,
+) -> usize {
+    let mut step = 0;
+    let mag = instructions.len();
+    let end: String = (0..num_zs).map(|_| 'Z').collect();
+
+    while cursor.chars().rev().take(num_zs).collect::<String>() != end {
+        cursor = network
+            .get(&cursor)
+            .unwrap_or_else(|| panic!("invalid node {cursor}"))
+            .process(&instructions[step % mag]);
+        step += 1;
+    }
+    step
+}
+
+pub fn lcm(nums: &[usize]) -> usize {
+    if nums.len() == 1 {
+        return nums[0];
+    }
+    let a = nums[0];
+    let b = lcm(&nums[1..]);
+    a * b / gcd_of_two_numbers(a, b)
+}
+
+fn gcd_of_two_numbers(a: usize, b: usize) -> usize {
+    if b == 0 {
+        return a;
+    }
+    gcd_of_two_numbers(b, a % b)
+}
+
+fn traverse_network_parrallel(
+    cursors: Vec<String>,
+    network: &HashMap<String, Node>,
+    instructions: &Vec<Instruction>,
+) -> usize {
+    let steps: Vec<usize> = cursors
+        .par_iter()
+        .map(|c| traverse_network(c.to_string(), 1, network, instructions))
+        .collect();
+    lcm(&steps)
+}
+
 fn main() -> Result<()> {
     let s = include_str!("../../data/day8.input");
     let (instructions, s) = s.split_once("\n\n").unwrap();
@@ -67,18 +117,17 @@ fn main() -> Result<()> {
         .map(|node| (node.id.to_string(), node))
         .collect();
 
-    let mut step = 0;
-    let mut cursor = String::from("AAA");
-    let mag = instructions.len();
+    let step = traverse_network(String::from("AAA"), 3, &network, &instructions);
+    println!("Part 1: {step}");
 
-    while cursor != "ZZZ" {
-        cursor = network
-            .get(&cursor)
-            .unwrap_or_else(|| panic!("invalid node {cursor}"))
-            .process(&instructions[step % mag]);
-        step += 1;
-    }
-
-    println!("steps: {step}");
+    // part 2
+    let nodes = network.keys().collect_vec();
+    let start_nodes = nodes
+        .iter()
+        .filter(|n| n.chars().last().unwrap() == 'A')
+        .map(|s| s.to_string())
+        .collect_vec();
+    let step = traverse_network_parrallel(start_nodes, &network, &instructions);
+    println!("Part 2: {step}");
     Ok(())
 }
